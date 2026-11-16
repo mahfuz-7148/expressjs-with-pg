@@ -65,6 +65,25 @@ app.get('/api/v1/users', async (req: Request, res: Response) => {
   })
 })
 
+app.get('/api/v1/users/:id', async (req: Request, res: Response) => {
+  const {id} = req.params
+  const result = await pool.query(`
+   SELECT * FROM users WHERE id = $1
+  `, [id])
+  // console.log(result.rows[0])
+  if (result.rowCount === 0) {
+    res.status(404).json({
+      success: false,
+      message: "User not found!!",
+    });
+  }
+  res.status(200).json({
+    success: true,
+    message: 'user retrieved successfully',
+    data: result.rows[0]
+  })
+})
+
 app.listen(config.port, () => {
   console.log(`server connected at port ${config.port}`)
 })
