@@ -84,6 +84,51 @@ app.get('/api/v1/users/:id', async (req: Request, res: Response) => {
   })
 })
 
+app.put('/api/v1/users/:id', async (req: Request, res: Response) => {
+  const {id} = req.params
+  const {name, password, age, isActive} = req.body
+  const result = await pool.query(`
+   UPDATE users
+   SET 
+   name = COALESCE($1, name),
+   password = COALESCE($2, password),
+   age = COALESCE($3, age),
+   isActive = COALESCE($4, isActive),
+   updatedAt = NOW()
+   WHERE id = $5 RETURNING *
+  `, [name ?? null, password ?? null, age ?? null, isActive ?? null, id])
+  // console.log(result.rows[0])
+  if (result.rowCount === 0) {
+    res.status(404).json({
+      success: false,
+      message: "User not found!!",
+    });
+  }
+  res.status(200).json({
+    success: true,
+    message: 'user updated successfully',
+    data: result.rows[0]
+  })
+})
+
+app.delete('/api/v1/users/:id', async (req: Request, res: Response) => {
+  const {id} = req.params
+  const result = await pool.query(`
+   DELETE FROM users WHERE id = $1
+  `, [id])
+  // console.log(result.rows[0])
+  if (result.rowCount === 0) {
+    res.status(404).json({
+      success: false,
+      message: "User not found!!",
+    });
+  }
+  res.status(200).json({
+    success: true,
+    message: 'user deleted successfully'
+  })
+})
+
 app.listen(config.port, () => {
   console.log(`server connected at port ${config.port}`)
 })
